@@ -1,86 +1,111 @@
 from django.conf import settings
-from django.contrib.sites.models import RequestSite
-from django.contrib.sites.models import Site
+from django.db import transaction
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.contrib.sites.models import Site, RequestSite
 
 from registration import signals
-from registration.forms import RegistrationForm
-from registration.models import RegistrationProfile
-
+from registration.forms import RegistrationForm, ModerationForm
+from registration.models import RegistrationProfile, ALREADY_ACTIVATED
 
 class DefaultBackend(object):
-    """
-    A registration backend which follows a simple workflow:
 
-    1. User signs up, inactive account is created.
-
-    2. Email is sent to user with activation link.
-
-    3. User clicks activation link, account is now active.
-
-    Using this backend requires that
-
-    * ``registration`` be listed in the ``INSTALLED_APPS`` setting
-      (since this backend makes use of models defined in this
-      application).
-
-    * The setting ``ACCOUNT_ACTIVATION_DAYS`` be supplied, specifying
-      (as an integer) the number of days from registration during
-      which a user may activate their account (after that period
-      expires, activation will be disallowed).
-
-    * The creation of the templates
-      ``registration/activation_email_subject.txt`` and
-      ``registration/activation_email.txt``, which will be used for
-      the activation email. See the notes for this backends
-      ``register`` method for details regarding these templates.
-
-    Additionally, registration can be temporarily closed by adding the
-    setting ``REGISTRATION_OPEN`` and setting it to
-    ``False``. Omitting this setting, or setting it to ``True``, will
-    be interpreted as meaning that registration is currently open and
-    permitted.
-
-    Internally, this is accomplished via storing an activation key in
-    an instance of ``registration.models.RegistrationProfile``. See
-    that model and its custom manager for full documentation of its
-    fields and supported operations.
-    
-    """
-    def register(self, request, **kwargs):
-        """
-        Given a username, email address and password, register a new
-        user account, which will initially be inactive.
-
-        Along with the new ``User`` object, a new
-        ``registration.models.RegistrationProfile`` will be created,
-        tied to that ``User``, containing the activation key which
-        will be used for this account.
-
-        An email will be sent to the supplied email address; this
-        email should contain an activation link. The email will be
-        rendered using two templates. See the documentation for
-        ``RegistrationProfile.send_activation_email()`` for
-        information about these templates and the contexts provided to
-        them.
-
-        After the ``User`` and ``RegistrationProfile`` are created and
-        the activation email is sent, the signal
-        ``registration.signals.user_registered`` will be sent, with
-        the new ``User`` as the keyword argument ``user`` and the
-        class of this backend as the sender.
-
-        """
-        username, email, password = kwargs['username'], kwargs['email'], kwargs['password1']
+    def _send_registration_email(self, request, profile):
+        # get the current site
         if Site._meta.installed:
             site = Site.objects.get_current()
         else:
             site = RequestSite(request)
-        new_user = RegistrationProfile.objects.create_inactive_user(username, email,
-                                                                    password, site)
-        signals.user_registered.send(sender=self.__class__,
-                                     user=new_user,
-                                     request=request)
-        return new_user
+
+        # send a new user registration email explaining the next steps
+        subject = render_to_string('registration/registration_subject.txt', {
+            'site': site
+        })
+        # no newlines
+        subject = ''.join(subject.splitlines())
+
+        message = render_to_string('registration/registration_email.txt', {
+            'site': site,
+            'profile': profile,
+            'moderated': self.moderation_required(request, profile),
+            'expiration_days': self.get_activation_days(request),
+        })
+
+        profile.user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL)
+
+    def _send_moderator_email(self, request, profile):
+        # get the current site
+        if Site._meta.installed:
+            site = Site.objects.get_current()
+        else:
+            site = RequestSite(request)
+
+        # send a new user registration email explaining the next steps
+        subject = render_to_string('registration/moderator_subject.txt', {
+            'site': site
+        })
+
+        # no newlines
+        subject = ''.join(subject.splitlines())
+
+        message = render_to_string('registration/moderator_email.txt', {
+            'site': site,
+            'profile': profile,
+            'expiration_days': self.get_activation_days(request),
+        })
+
+        # send an email to all account moderators
+        moderators = (x[1] for x in self.get_moderators(request))
+        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, moderators)
+
+    def _send_acceptance_email(self, request, profile, **context):
+        # get the current site
+        if Site._meta.installed:
+            site = Site.objects.get_current()
+        else:
+            site = RequestSite(request)
+
+        # send a new user registration email explaining the next steps
+        subject = render_to_string('registration/acceptance_subject.txt', {
+            'site': site
+        })
+
+        # no newlines
+        subject = ''.join(subject.splitlines())
+
+        context.update({
+            'site': site,
+            'profile': profile,
+        })
+
+        message = render_to_string('registration/acceptance_email.txt', context)
+
+        profile.user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL)
+
+    def get_profile(self, request, activation_key):
+        try:
+            return RegistrationProfile.objects.select_related('user').get(activation_key=activation_key)
+        except RegistrationProfile.DoesNotExist:
+            pass
+
+    def get_profiles(self, request, **kwargs):
+        return RegistrationProfile.objects.filter(**kwargs)
+
+    def register(self, request, form):
+        cleaned_data = form.cleaned_data
+        username, email, password = cleaned_data['username'], cleaned_data['email'], cleaned_data['password1']
+
+        if Site._meta.installed:
+            site = Site.objects.get_current()
+        else:
+            site = RequestSite(request)
+
+        user = RegistrationProfile.objects.create_inactive_user(username,
+            email, password, site)
+
+        self._send_registration_email(request, user.registration)
+
+        return user
 
     def activate(self, request, activation_key):
         """
@@ -91,14 +116,58 @@ class DefaultBackend(object):
         ``registration.signals.user_activated`` will be sent, with the
         newly activated ``User`` as the keyword argument ``user`` and
         the class of this backend as the sender.
-        
+
         """
         activated = RegistrationProfile.objects.activate_user(activation_key)
         if activated:
-            signals.user_activated.send(sender=self.__class__,
-                                        user=activated,
-                                        request=request)
+            signals.user_activated.send(sender=self.__class__, user=activated,
+                request=request)
+
         return activated
+
+    def verify(self, request, activation_key):
+        """
+        Given an activation key, mark the account as being verified for
+        moderation. Send an email to all account moderators on the first
+        occurence.
+
+        The status of the verification is returned which denotes whether the
+        verification was successful or the account has already been verified.
+        """
+        profile = self.get_profile(request, activation_key)
+
+        if profile and not profile.verified:
+            # marked as verified
+            profile.verified = True
+            profile.save()
+
+            # send verification signal
+            signals.user_verified.send(sender=self.__class__, user=profile.user,
+                request=request)
+
+            self._send_moderator_email(request, profile)
+
+        return profile
+
+    @transaction.commit_on_success
+    def moderate(self, request, form, activation_key, **kwargs):
+        cleaned_data = form.cleaned_data
+
+        # mark the registration profile as active
+        profile = self.get_profile(request, activation_key)
+
+        if not profile:
+            return
+
+        profile.activation_key = ALREADY_ACTIVATED
+        profile.save()
+
+        if cleaned_data['status'].lower() == 'accept':
+            # mark the user as active
+            profile.user.is_active = True
+            profile.user.save()
+
+        self._send_acceptance_email(request, profile, **cleaned_data)
 
     def registration_allowed(self, request):
         """
@@ -111,22 +180,35 @@ class DefaultBackend(object):
 
         * If ``REGISTRATION_OPEN`` is both specified and set to
           ``False``, registration is not permitted.
-        
+
         """
         return getattr(settings, 'REGISTRATION_OPEN', True)
 
-    def get_form_class(self, request):
+    def moderation_required(self, request, profile):
+        "Indicate whether account moderation is enabled."
+        return getattr(settings, 'ACCOUNT_MODERATION', False)
+
+    def get_moderators(self, request):
+        "Returns a tuple of moderators."
+        return getattr(settings, 'ACCOUNT_MODERATORS', ())
+
+    def get_activation_days(self, request):
+        "Returns the number of days allowed for activation"
+        return getattr(self, 'ACCOUNT_ACTIVATION_DAYS', None)
+
+    def get_registration_form_class(self, request):
         """
         Return the default form class used for user registration.
-        
         """
         return RegistrationForm
+
+    def get_moderation_form_class(self, request):
+        return ModerationForm
 
     def post_registration_redirect(self, request, user):
         """
         Return the name of the URL to redirect to after successful
         user registration.
-        
         """
         return ('registration_complete', (), {})
 
@@ -134,6 +216,12 @@ class DefaultBackend(object):
         """
         Return the name of the URL to redirect to after successful
         account activation.
-        
         """
         return ('registration_activation_complete', (), {})
+
+    def post_moderation_redirect(self, request, user):
+        """
+        Return the name of the URL to redirect to after successful account
+        moderation.
+        """
+        return ('registration_moderate_list', (), {})
