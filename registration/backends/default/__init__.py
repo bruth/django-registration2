@@ -162,7 +162,7 @@ class DefaultBackend(object):
         profile.activation_key = ALREADY_ACTIVATED
         profile.save()
 
-        if cleaned_data['status'].lower() == 'accept':
+        if cleaned_data['status'].lower() == 'approve':
             # mark the user as active
             profile.user.is_active = True
             profile.user.save()
