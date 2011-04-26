@@ -124,7 +124,6 @@ class RegistrationFormNoFreeEmail(RegistrationForm):
 
 
 class ModerationForm(forms.Form):
+    status = forms.CharField()
     comment = forms.CharField(widget=forms.Textarea(attrs={'cols': 55, 'rows': 6}),
         required=False)
-    status = forms.CharField()
-    confirm = forms.BooleanField()
