@@ -1,6 +1,8 @@
 from django.shortcuts import redirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext
+from django.views.decorators.cache import never_cache
+from django.contrib.auth.decorators import permission_required
 
 from registration import signals
 from registration.backends import get_backend
@@ -44,6 +46,7 @@ def register(request, backend, template_name='registration/registration_form.htm
         'form': form
     }, context_instance=RequestContext(request))
 
+@never_cache
 def activate(request, backend, template_name='registration/activate.html', **kwargs):
     backend = get_backend(backend)
     profile = backend.get_profile(request, **kwargs)
@@ -62,6 +65,7 @@ def activate(request, backend, template_name='registration/activate.html', **kwa
         'moderation_required': moderation_required,
     }, context_instance=RequestContext(request))
 
+@never_cache
 def verify(request, backend, template_name='registration/registration_verify.html', **kwargs):
     backend = get_backend(backend)
     verified = backend.verify(request, **kwargs)
@@ -70,7 +74,7 @@ def verify(request, backend, template_name='registration/registration_verify.htm
         'verified': verified,
     }, context_instance=RequestContext(request))
 
-
+@never_cache
 def moderate(request, backend, template_name='registration/registration_moderate.html', **kwargs):
     backend = get_backend(backend)
 
@@ -95,7 +99,8 @@ def moderate(request, backend, template_name='registration/registration_moderate
         'profile': profile,
     }, context_instance=RequestContext(request))
 
-
+@permission_required('registration.change_registrationprofile')
+@never_cache
 def moderate_list(request, backend, template_name='registration/registration_moderate_list.html'):
     backend = get_backend(backend)
     profiles = backend.get_profiles(request)
