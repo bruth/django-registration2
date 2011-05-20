@@ -190,7 +190,7 @@ class DefaultBackend(object):
 
     def get_moderators(self, request):
         "Returns a tuple of moderators."
-        return getattr(settings, 'ACCOUNT_MODERATORS', ())
+        return getattr(settings, 'ACCOUNT_MODERATORS', settings.MANAGERS)
 
     def get_activation_days(self, request):
         "Returns the number of days allowed for activation"
