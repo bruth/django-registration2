@@ -1,0 +1,4 @@
+.DS_Store
+*.pyc
+_build
+_static
