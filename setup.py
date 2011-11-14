@@ -53,8 +53,8 @@ if root_dir != '':
 for dirpath, dirnames, filenames in os.walk('registration'):
     # Ignore dirnames that start with '.'
     for i, dirname in enumerate(dirnames):
-        if dirname.startswith('.'): del dirnames[i]
-        elif dirname in ('tests', 'fixtures'): del dirnames[i]
+        if dirname.startswith('.'):
+            del dirnames[i]
     if '__init__.py' in filenames:
         packages.append('.'.join(fullsplit(dirpath)))
     elif filenames:
@@ -70,9 +70,9 @@ version = __import__('registration').get_version()
 
 setup(
     version = version,
-    name = 'django-registration',
+    name = 'django-registration2',
     author = 'Byron Ruth',
-    author_email = 'bruth@codeomics.com',
+    author_email = 'b@devel.io',
     description = 'Registration and moderation utilites',
     license = 'BSD',
     keywords = 'registration moderation',

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <table class="list">
+        <thead>
+            <th>Name</th>
+            <th>Institution</th>
+            <th>Email</th>
+        </thead>
+        <tbody>
+            {% for profile in profiles %}
+                {% with profile.user as user %}
+                    {% if profile.verified %}
+                        <tr>
+                            <td><a href="{% url moderation-detail activation_key=profile.activation_key %}">{{ user.get_full_name }}</a></td>
+                    {% else %}
+                        <tr class="unverified">
+                            <td>{{ user.get_full_name }}</td>
+                    {% endif %}
+                    <td>{{ user.email|urlize }}</td>
+                </tr>
+                {% endwith %}
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

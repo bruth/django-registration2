@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <form method="post" action="">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}">
+        
+        <table>
+            <tr>
+                <th>{{ form.email.label_tag }}</th>
+                <td>{{ form.email }}</td>
+            </tr>
+            <tr>
+                <th>{{ form.password.label_tag }}</th>
+                <td>{{ form.password }}
+                    <div><a href="{% url password-reset %}">Forget password?</a></div>
+                </td>
+            </tr>
+        </table>
+
+        <div style="controls">
+            <input type="submit" value="Login">
+        </div>
+    </form>
+{% endblock %}

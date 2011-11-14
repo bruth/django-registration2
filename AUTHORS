@@ -1,7 +1,12 @@
-The primary author of django-registration is James Bennett
-<james@b-list.org>, who may be found online at
-<http://www.b-list.org/>.
+Byron Ruth <b@devel.io>
 
+The below list are the original authors of django-registration prior
+to version.
+
+----
+
+The primary author of the original django-registration app is James Bennett
+<james@b-list.org>, who may be found online at <http://www.b-list.org/>.
 
 Others who have contributed to the application:
 
