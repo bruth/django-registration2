@@ -1,23 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
-
-
-
-import re
-import random
-
-from django import forms
-from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, forms as auth_forms
-from django.utils.translation import ugettext_lazy as _
-
-from django import forms
-from django.db import transaction
-from django.contrib.auth.models import User
-from django.contrib.auth import authenticate, forms as auth_forms
-from django.utils.translation import ugettext_lazy as _
-
 from registration.utils import validate_password, generate_random_username
 
 MIN_PASSWORD_LENGTH = 8
@@ -28,7 +12,7 @@ class PasswordResetForm(forms.ModelForm):
         widget=forms.PasswordInput,
         help_text=_('Passwords must be {0} characters in length and contain '
             'characters from 3 of the 4 categories: lowercase characters, '
-            'uppercase characters, numbers and symbols.'.format(PASSWORD_LENGTH)))
+            'uppercase characters, numbers and symbols.'.format(MIN_PASSWORD_LENGTH)))
 
     password2 = forms.CharField(label=_('Re-type Password'), widget=forms.PasswordInput)
 
@@ -127,7 +111,7 @@ class EmailAuthenticationForm(forms.Form):
     def __init__(self, request=None, *args, **kwargs):
         self.request = request
         self.user_cache = None
-        super(AuthenticateForm, self).__init__(*args, **kwargs)
+        super(EmailAuthenticationForm, self).__init__(*args, **kwargs)
 
     def clean(self):
         email = self.cleaned_data.get('email')

@@ -1,7 +1,9 @@
 import re
 import random
 from django import forms
+from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
+from django.conf.urls.defaults import patterns, url
 
 USERNAME_LEN_MIN = 30 ** 10
 USERNAME_LEN_MAX = 10 ** 10
@@ -17,7 +19,7 @@ def generate_random_username(attempts=10):
         if not qs.filter(username=username).exists():
             return username
 
-    raise StandardError('max attempts have been reached (n={0})'.format(attempts)
+    raise StandardError('max attempts have been reached (n={0})'.format(attempts))
 
 def validate_password(password, length):
     "Validates the given password."
@@ -45,7 +47,7 @@ def validate_password(password, length):
 
 
 def create_urls(backend):
-    urlpatterns = patterns('',
+    return patterns('',
         url(r'^activate/complete/$', 'django.views.generic.simple.direct_to_template', {
             'template': 'registration/activation_complete.html'
         }, name='registration_activation_complete'),
@@ -69,4 +71,4 @@ def create_urls(backend):
         url(r'^register/closed/$', 'django.views.generic.simple.direct_to_template', {
             'template': 'registration/registration_closed.html'
         }, name='registration_disallowed'),
-    )        
+    )
