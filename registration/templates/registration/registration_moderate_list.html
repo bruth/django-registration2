@@ -4,7 +4,6 @@
     <table class="list">
         <thead>
             <th>Name</th>
-            <th>Institution</th>
             <th>Email</th>
         </thead>
         <tbody>
@@ -12,7 +11,7 @@
                 {% with profile.user as user %}
                     {% if profile.verified %}
                         <tr>
-                            <td><a href="{% url moderation-detail activation_key=profile.activation_key %}">{{ user.get_full_name }}</a></td>
+                            <td><a href="{% url moderate-registration activation_key=profile.activation_key %}">{{ user.get_full_name }}</a></td>
                     {% else %}
                         <tr class="unverified">
                             <td>{{ user.get_full_name }}</td>

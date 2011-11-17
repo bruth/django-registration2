@@ -8,9 +8,10 @@ try:
 except ImportError:
     from django.utils.importlib import import_module
 
+DEFAULT_BACKEND_ALIAS = 'default'
+
 REGISTRATION_BACKENDS = getattr(settings, 'REGISTRATION_BACKENDS', {
-    'default': 'registration.backends.default.DefaultBackend',
-    'simple': 'registration.backends.simple.SimpleBackend',
+    DEFAULT_BACKEND_ALIAS: 'registration.backends.default.Backend',
 })
 
 def get_backend(alias):

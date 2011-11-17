@@ -1,8 +1,6 @@
 import re
 import random
-
-from django.db import models, transaction
-from django.contrib.auth.models import User
+from django.db import models
 from django.utils.hashcompat import sha_constructor
 
 SHA1_RE = re.compile('^[a-f0-9]{40}$')
@@ -53,26 +51,3 @@ class RegistrationManager(models.Manager):
 
         activation_key = sha_constructor(salt+username).hexdigest()
         return self.create(user=user, activation_key=activation_key)
-
-    @transaction.commit_on_success
-    def create_inactive_user(self, username, email, password, site, send_email=True):
-        """Create a new, inactive ``User``, generate a
-        ``RegistrationProfile`` and email its activation key to the
-        ``User``, returning the new ``User``.
-
-        By default, an activation email will be sent to the new
-        user. To disable this, pass ``send_email=False``.
-
-        """
-        user = User.objects.create_user(username, email, password)
-        user.is_active = False
-        user.save()
-
-        registration_profile = self.create_profile(user)
-
-        if send_email:
-            registration_profile.send_activation_email(site)
-
-        return user
-
-

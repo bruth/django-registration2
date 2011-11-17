@@ -21,7 +21,7 @@ class RegistrationProfile(models.Model):
     registration and activation.
     """
 
-    user = models.OneToOneField(User, related_name='registration',
+    user = models.OneToOneField(User, related_name='registration_profile',
         verbose_name=_('user'))
 
     activation_key = models.CharField(_('activation key'), max_length=40)
@@ -53,20 +53,19 @@ class RegistrationProfile(models.Model):
     def __unicode__(self):
         return u'Registration Profile for %s' % self.user
 
-    def save(self):
+    def save(self, *args, **kwargs):
         if not self.moderation_time and self.moderated:
             self.moderation_time = datetime.now()
-        super(RegistrationProfile, self).save()
+        super(RegistrationProfile, self).save(*args, **kwargs)
 
     @transaction.commit_on_success
     def activate(self):
-        if not self.activation_expired():
-            user = self.user
-            user.is_active = True
-            user.save()
-            self.activated = True
-            self.save()
-            return user
+        user = self.user
+        user.is_active = True
+        user.save()
+        self.activated = True
+        self.save()
+        return user
 
     def activation_expired(self, activation_days=None):
         """Determine whether this ``RegistrationProfile``'s activation key has
@@ -84,10 +83,6 @@ class RegistrationProfile(models.Model):
         to the current date, the key has expired and this method returns
         ``True``.
         """
-        # this profile has already been activated
-        if self.activated:
-            return True
-
         # if this is not set or is 0, always return False (no expiration)
         if not activation_days:
             return False

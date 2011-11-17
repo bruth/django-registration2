@@ -5,8 +5,8 @@ from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 from django.conf.urls.defaults import patterns, url
 
-USERNAME_LEN_MIN = 30 ** 10
-USERNAME_LEN_MAX = 10 ** 10
+USERNAME_LEN_MIN = 10 ** 10
+USERNAME_LEN_MAX = 30 ** 10
 
 def generate_random_username(attempts=10):
     qs = User.objects.all()
@@ -42,7 +42,7 @@ def validate_password(password, length):
         cnt += 1
 
     if cnt < 3:
-        forms.ValidationError(_('This password does not meet the minimum '
+        raise forms.ValidationError(_('This password does not meet the minimum '
             'requirements.'))
 
 
@@ -61,14 +61,14 @@ def create_urls(backend):
         }, name='registration_activate'),
 
         url(r'^register/$', 'registration.views.register', {
-            'backend': 'registration.backends.default.DefaultBackend'
-        }, name='registration_register'),
+            'backend': backend
+        }, name='register'),
     
         url(r'^register/complete/$', 'django.views.generic.simple.direct_to_template', {
             'template': 'registration/registration_complete.html'
-        }, name='registration_complete'),
+        }, name='registration-complete'),
         
         url(r'^register/closed/$', 'django.views.generic.simple.direct_to_template', {
             'template': 'registration/registration_closed.html'
-        }, name='registration_disallowed'),
+        }, name='registration-disabled'),
     )
