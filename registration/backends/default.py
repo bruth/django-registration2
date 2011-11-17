@@ -175,6 +175,7 @@ class Backend(object):
     def moderate(self, request, form, profile, **kwargs):
         if not profile.moderated:
             profile.moderated = True
+            profile.moderator = request.user
             profile.save()
 
             # XXX ghetto and fragile..
