@@ -76,6 +76,7 @@ setup(
     description = 'Registration and moderation utilites',
     license = 'BSD',
     keywords = 'registration moderation',
+    url = 'https://github.com/bruth/django-registration',
 
     packages = packages,
     cmdclass = cmdclasses,

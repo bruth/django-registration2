@@ -1,4 +1,4 @@
 .DS_Store
 *.pyc
-_build
-_static
+dist
+MANIFEST
