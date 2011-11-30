@@ -53,6 +53,7 @@ class EmailOnlyRegistrationForm(RegistrationForm):
 class EmailAuthenticationForm(auth_forms.AuthenticationForm):
     email = forms.CharField(label=_('Email'))
     password = forms.CharField(label=_('Password'), widget=forms.PasswordInput)
+    username = forms.CharField(required=False)
 
     def clean(self):
         email = self.cleaned_data.get('email')
