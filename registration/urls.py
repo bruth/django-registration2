@@ -1,13 +1,13 @@
-from django.conf.urls.defaults import url, patterns, include
-from django.views.generic.simple import direct_to_template
+from django.conf.urls import url, patterns, include
+from django.views.generic.base import TemplateView
 from registration.views import verify, register
 
 urlpatterns = patterns('',
     url(r'^register/$', register, name='register'),
 
-    url(r'^register/complete/$', direct_to_template, {
-        'template': 'registration/registration_complete.html'
-    }, name='registration-complete'),
+    url(r'^register/complete/$', TemplateView.as_view(
+        template_name='registration/registration_complete.html'
+    ), name='registration-complete'),
 
     # Activation keys get matched by \w+ instead of the more specific
     # [a-fA-F0-9]{40} because a bad activation key should still get to the view;
@@ -16,9 +16,9 @@ urlpatterns = patterns('',
     url(r'^verify/(?P<activation_key>\w+)/$', verify,
         name='verify-registration'),
 
-    url(r'^register/closed/$', direct_to_template, {
-        'template': 'registration/registration_closed.html'
-    }, name='registration-disabled'),
+    url(r'^register/closed/$', TemplateView.as_view(
+        template_name='registration/registration_closed.html'
+    ), name='registration-disabled'),
 
     url(r'^moderate/(?P<activation_key>\w+)/$', 'registration.views.moderate',
         name='moderate-registration'),
