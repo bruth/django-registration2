@@ -37,11 +37,11 @@ def verify(request, backend='default', template_name='registration/registration_
         # not it is a verified account.
         if backend.moderation_required(request, profile):
             moderation_required = True
-            profile = backend.verify(request, profile, **kwargs)
+            backend.verify(request, profile, **kwargs)
         else:
             moderation_required = False
             # attempt to activate this user
-            profile = backend.activate(request, profile, **kwargs)
+            backend.activate(request, profile, **kwargs)
 
     return render(request, template_name, {
         'profile': profile,
