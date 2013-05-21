@@ -1,7 +1,7 @@
 import re
 import random
+import hashlib
 from django.db import models
-from django.utils.hashcompat import sha_constructor
 
 SHA1_RE = re.compile('^[a-f0-9]{40}$')
 
@@ -43,11 +43,11 @@ class RegistrationManager(models.Manager):
         generated from a combination of the ``User``'s username and a random
         salt.
         """
-        salt = sha_constructor(str(random.random())).hexdigest()[:5]
+        salt = hashlib.sha1(str(random.random())).hexdigest()[:5]
         username = user.username
 
         if isinstance(username, unicode):
             username = username.encode('utf-8')
 
-        activation_key = sha_constructor(salt+username).hexdigest()
+        activation_key = hashlib.sha1(salt+username).hexdigest()
         return self.create(user=user, activation_key=activation_key)

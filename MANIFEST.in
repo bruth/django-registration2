@@ -1,10 +1,4 @@
-include CHANGELOG
-include INSTALL
 include LICENSE
-include README
+include README.md
 include AUTHORS
-
-recursive-include docs *
-recursive-include registration/locale *
-
 global-exlude .DS_Store

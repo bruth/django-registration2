@@ -3,7 +3,7 @@ import random
 from django import forms
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
-from django.conf.urls.defaults import patterns, url
+from django.conf.urls import patterns, url
 
 USERNAME_LEN_MIN = 10 ** 10
 USERNAME_LEN_MAX = 30 ** 10
