@@ -2,3 +2,4 @@ include LICENSE
 include README.md
 include AUTHORS
 global-exlude .DS_Store
+graft registration/templates
