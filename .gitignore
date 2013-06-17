@@ -2,5 +2,6 @@
 *.py?
 *.egg-info
 .DS_Store
+.idea*
 dist
 MANIFEST

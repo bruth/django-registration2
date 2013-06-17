@@ -1,10 +1,11 @@
 from datetime import datetime, timedelta
 
 from django.db import models, transaction
-from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 
 from registration.managers import RegistrationManager
+from registration.user import User
+
 
 class RegistrationProfile(models.Model):
     """A simple profile which stores an activation key for use during user

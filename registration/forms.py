@@ -1,8 +1,10 @@
 from django import forms
-from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth import authenticate, forms as auth_forms
 from registration.utils import generate_random_username
+
+from registration.user import User
+
 
 class RegistrationForm(auth_forms.UserCreationForm):
     """Extends the standard Django user creation form that supplies a few more
