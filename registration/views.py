@@ -42,6 +42,8 @@ def verify(request, backend='default', template_name='registration/registration_
             moderation_required = False
             # attempt to activate this user
             backend.activate(request, profile, **kwargs)
+    else:
+        moderation_required = None
 
     return render(request, template_name, {
         'profile': profile,
